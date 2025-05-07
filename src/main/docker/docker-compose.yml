@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: my_postgres
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"  # Exposes PostgreSQL to localhost
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Persistent storage for data
+    networks:
+      - mynetwork
+volumes:
+  pgdata:
+networks:
+  mynetwork:
+    driver: bridge
