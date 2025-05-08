@@ -1,16 +1,10 @@
 FROM bitnami/wildfly:29
 LABEL authors="jellz"
 
-# Set correct working directory
-WORKDIR /opt/bitnami/wildfly/standalone/deployments/
+# Copy WAR file (with embedded PostgreSQL driver) to the deployment directory
+COPY target/dockerAPI-1.0-SNAPSHOT.war /opt/bitnami/wildfly/standalone/deployments/
 
-# Copy WAR file to the correct deployment directory
-COPY target/dockerAPI-1.0-SNAPSHOT.war .
-
-# Optionally replace the standalone.xml if you need custom config
-# COPY standalone.xml /opt/bitnami/wildfly/standalone/configuration/standalone.xml
-
-# Expose default WildFly HTTP port
+# Expose default WildFly HTTP portc
 EXPOSE 8080
 
 # Start WildFly

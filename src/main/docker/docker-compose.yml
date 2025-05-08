@@ -1,23 +1,10 @@
 version: "3.8"
-services:
-  wildfly:
-    image: quay.io/wildfly/wildfly:latest
-    ports:
-      - "8080:8080"
-      - "9990:9990"
-    environment:
-      - DB_HOST=database
-      - DB_PORT=5432
-      - DB_NAME=mydb
-      - DB_USER=myuser
-      - DB_PASSWORD=mypassword
-    depends_on:
-      - database
-    networks:
-      - app-network
 
-  database:
+services:
+  josephdb:
     image: postgres:latest
+    container_name: josephdb
+    hostname: josephdb
     environment:
       - POSTGRES_USER=myuser
       - POSTGRES_PASSWORD=mypassword
@@ -26,6 +13,35 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  josephwildfly:
+    container_name: josephwildfly
+    hostname: josephwildfly
+    image: jjwf:latest
+    ports:
+      - "8080:8080"
+      - "9990:9990"
+    environment:
+      - DB_HOST=josephdb
+      - DB_PORT=5432
+      - DB_NAME=mydb
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+    depends_on:
+      - josephdb
+    networks:
+      - app-network
+
+  webserver:
+    image: nginx:latest
+    container_name: webserver
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/share/nginx/html
+      - ./index.html:/usr/share/nginx/html/index.html
     networks:
       - app-network
 

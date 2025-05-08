@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Joseph's API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f0f4f8;
+            color: #333;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #apiResponse {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: auto;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .form-container {
+            margin-top: 20px;
+            text-align: left;
+            display: inline-block;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container input, .form-container button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .form-container button {
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        function loadData(apiNumber) {
+            let url = '';
+            if (apiNumber === 1) {
+                url = 'http://localhost:8080/dockerAPI-1.0-SNAPSHOT/rs/hello';
+            } else if (apiNumber === 2) {
+                url = 'http://localhost:8080/dockerAPI-1.0-SNAPSHOT/rs/football';
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (apiNumber === 1) {
+                        // Crear tabla para el mensaje
+                        const html = `
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Mensaje</th>
+                          <th>Fecha</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>${data.mensaje}</td>
+                          <td>${data.fecha}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                `;
+                        document.getElementById('apiResponse').innerHTML = html;
+                    } else if (apiNumber === 2) {
+                        renderFootballTable(data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching the API:', error);
+                    document.getElementById('apiResponse').innerText = 'Failed to load data from API.';
+                });
+        }
+
+
+        function renderMessageTable(data) {
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mensaje</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${data.mensaje}</td>
+                            <td>${data.fecha}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('apiResponse').innerHTML = html;
+        }
+
+        function renderFootballTable(data) {
+            let html = `
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Team Name</th>
+                      <th>City</th>
+                      <th>Founded</th>
+                      <th>Manager</th>
+                      <th>Stadium</th>
+                      <th>Website</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+              `;
+
+            data.forEach(team => {
+                html += `
+                  <tr>
+                    <td>${team.teamName}</td>
+                    <td>${team.city}</td>
+                    <td>${team.foundedYear}</td>
+                    <td>${team.manager}</td>
+                    <td>${team.stadium}</td>
+                    <td><a href="${team.website}" target="_blank">Visit</a></td>
+                  </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById('apiResponse').innerHTML = html;
+        }
+
+        function sendMessage() {
+            const message = document.getElementById('messageInput').value;
+
+            if (!message.trim()) {
+                alert('Please enter a message.');
+                return;
+            }
+
+            fetch('http://localhost:8080/dockerAPI-1.0-SNAPSHOT/rs/hello/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    renderMessageTable(data); // Update the table with the new message
+                })
+                .catch(error => {
+                    console.error('Error sending message:', error);
+                    document.getElementById('apiResponse').innerText = 'Failed to send message.';
+                });
+        }
+    </script>
+</head>
+<body>
+<h1>Joseph's API</h1>
+
+<div class="button-container">
+    <button onclick="loadData(1)">Load API 1</button>
+    <button onclick="loadData(2)">Load API 2</button>
+</div>
+
+<div id="apiResponse">Click a button to load data.</div>
+
+<div class="form-container">
+    <h2>Send a Message</h2>
+    <label for="messageInput">Message:</label>
+    <input type="text" id="messageInput" placeholder="Type your message here..." />
+    <button onclick="sendMessage()">Send Message</button>
+</div>
+</body>
+</html>
