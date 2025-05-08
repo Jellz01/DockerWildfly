@@ -19,7 +19,7 @@ services:
   josephwildfly:
     container_name: josephwildfly
     hostname: josephwildfly
-    image: jjwf:latest
+    image: jellz01/jjwf:latest
     ports:
       - "8080:8080"
       - "9990:9990"
