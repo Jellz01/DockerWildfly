@@ -10,7 +10,9 @@
     docker-compose up -d
 
 
-
+   
+   
+    docker cp "PATH/DE/TU/RPOYECTO.WAR" josephwildfly:/opt/bitnami/wildfly/standalone/deployments/
 
     docker cp "/home/jellz/Downloads/helloworld-rs (1)/dockerAPI/target/dockerAPI-1.0-SNAPSHOT.war" josephwildfly:/opt/bitnami/wildfly/standalone/deployments/
 
