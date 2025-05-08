@@ -14,32 +14,45 @@ import java.util.Map;
 @Path("/hello")
 public class HelloWorldResource {
 
+    private final String url = "jdbc:postgresql://josephdb:5432/mydb";
+    private final String user = "myuser";
+    private final String password = "mypassword";
+
+    private void ensureTableExists(Connection conn) throws SQLException {
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS MENSAJE (" +
+                "id SERIAL PRIMARY KEY, " +
+                "texto TEXT NOT NULL, " +
+                "fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)";
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(createTableSQL);
+        }
+    }
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLastMessage() {
-        String url = "jdbc:postgresql://josephdb:5432/mydb";
-        String user = "myuser";
-        String password = "mypassword";;
-
         String sql = "SELECT texto, fecha FROM MENSAJE ORDER BY id DESC LIMIT 1";
 
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = DriverManager.getConnection(url, user, password)) {
+            ensureTableExists(conn);
 
-            if (rs.next()) {
-                String texto = rs.getString("texto");
-                Timestamp fecha = rs.getTimestamp("fecha");
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
 
-                String json = String.format("{\"mensaje\": \"%s\", \"fecha\": \"%s\"}", texto, fecha.toString());
-                ResponseBuilder responseBuilder = Response.ok(json);
-                addCorsHeaders(responseBuilder);
-                return responseBuilder.build();
-            } else {
-                String json = "{\"mensaje\": \"No hay mensajes en la base de datos.\"}";
-                ResponseBuilder responseBuilder = Response.ok(json);
-                addCorsHeaders(responseBuilder);
-                return responseBuilder.build();
+                if (rs.next()) {
+                    String texto = rs.getString("texto");
+                    Timestamp fecha = rs.getTimestamp("fecha");
+
+                    String json = String.format("{\"mensaje\": \"%s\", \"fecha\": \"%s\"}", texto, fecha.toString());
+                    ResponseBuilder responseBuilder = Response.ok(json);
+                    addCorsHeaders(responseBuilder);
+                    return responseBuilder.build();
+                } else {
+                    String json = "{\"mensaje\": \"No hay mensajes en la base de datos.\"}";
+                    ResponseBuilder responseBuilder = Response.ok(json);
+                    addCorsHeaders(responseBuilder);
+                    return responseBuilder.build();
+                }
             }
 
         } catch (SQLException e) {
@@ -49,34 +62,29 @@ public class HelloWorldResource {
         }
     }
 
-
     @POST
     @Path("/message")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response receiveMessage(Map<String, String> payload) {
         String mensaje = payload.get("message");
-
-         String url = "jdbc:postgresql://josephdb:5432/mydb";
-         String user = "myuser";
-         String password = "mypassword";
-
         String insertSQL = "INSERT INTO MENSAJE (texto, fecha) VALUES (?, CURRENT_TIMESTAMP)";
 
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+        try (Connection conn = DriverManager.getConnection(url, user, password)) {
+            ensureTableExists(conn);
 
-            pstmt.setString(1, mensaje);
-            pstmt.executeUpdate();
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
+                pstmt.setString(1, mensaje);
+                pstmt.executeUpdate();
 
-            return Response.ok(Collections.singletonMap("status", "Mensaje guardado")).build();
+                return Response.ok(Collections.singletonMap("status", "Mensaje guardado")).build();
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
             return Response.status(500).entity(Collections.singletonMap("error", "Error en la base de datos")).build();
         }
     }
-
 
     @OPTIONS
     @Path("/message")
